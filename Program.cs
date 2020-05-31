@@ -19,6 +19,11 @@ namespace MantisBTMailTask
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<Worker>();
-                });
+                })
+                #if Linux
+                .UseSystemd();
+                #elif Windows
+                .UseWindowsService();
+                #endif
     }
 }

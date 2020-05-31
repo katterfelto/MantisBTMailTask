@@ -1,13 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
-
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+
+    <PublishTrimmed>true</PublishTrimmed>
+    <PublishSingleFile>true</PublishSingleFile>
     <UserSecretsId>dotnet-MantisBTMailTask-FB2209A4-FBA6-4B4A-9F04-E67F5790FF67</UserSecretsId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+    <DefineConstants>Windows</DefineConstants>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsLinux)'=='true'">
+    <DefineConstants>Linux</DefineConstants>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="2.6.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.3" />
-    <PackageReference Include="MySql.Data" Version="8.0.20" />
+    <PackageReference Include="MailKit" Version="2.6.0"/>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.3"/>
+    <PackageReference Include="MySql.Data" Version="8.0.20"/>
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsWindows)'=='true'">
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.1.3"/>
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsLinux)'=='true'">
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="3.1.3"/>
   </ItemGroup>
 </Project>
