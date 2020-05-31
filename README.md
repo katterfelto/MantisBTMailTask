@@ -1,7 +1,7 @@
 # MantisBTMailTask
-A windows service to process the outgoing mail queue for the MantisBT system.
+A windows service/systemd daemon to process the outgoing mail queue for the MantisBT system.
 
-I couldn't figure out how to solve the configuration issues I had with the PHP based mail sub-system in MantisBT. To solve it I fell back on my knowledge of C# and .NET to produce this hosted background service to cure the problem.
+I couldn't figure out how to solve the configuration issues I had with the PHP based mail sub-system in MantisBT. To solve it I fell back on my knowledge of C# and .NET to produce this hosted background service to debug and solve the problem.
 
 # How To Use
 1. In your MantisBT config_inc.php file you need to include the following line, this will stop the Web app delivering the mail:
