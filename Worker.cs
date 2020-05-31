@@ -37,7 +37,7 @@ namespace MantisBTMailTask
 
             _runOnce = configuration.GetValue<bool>("RunOnce");
 
-            _frequency = configuration.GetValue<bool>("Frequency");
+            _frequency = configuration.GetValue<int>("Frequency");
             if (_frequency == 0)
             {
                 _frequency = 10000; // Every 10 seconds
