@@ -21,6 +21,8 @@ namespace MantisBTMailTask
 
         private readonly bool _runOnce;
 
+        private readonly int _frequency;
+
         public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
             _logger = logger;
@@ -34,6 +36,12 @@ namespace MantisBTMailTask
             _mailConfig.CheckOptionalValues();
 
             _runOnce = configuration.GetValue<bool>("RunOnce");
+
+            _frequency = configuration.GetValue<bool>("Frequency");
+            if (_frequency == 0)
+            {
+                _frequency = 10000; // Every 10 seconds
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -59,7 +67,7 @@ namespace MantisBTMailTask
                 }
                 else
                 {
-                    await Task.Delay(1000, stoppingToken);
+                    await Task.Delay(_frequency, stoppingToken);
                 }
             }
         }
@@ -91,7 +99,7 @@ namespace MantisBTMailTask
         {
             List<long> sentIdList = new List<long>();
             
-            string query = "SELECT `email_id`, `email`, `subject`, `body`, `submitted` FROM `mantis_email_table`";
+            string query = "SELECT `email_id`, `email`, `subject`, `body`, `submitted` FROM `mantis_email_table` ORDER BY `submitted`";
             
             using var cmd = new MySqlCommand(query, oDB);
             using MySqlDataReader data = cmd.ExecuteReader();
