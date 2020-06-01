@@ -20,9 +20,9 @@ namespace MantisBTMailTask
                 {
                     services.AddHostedService<Worker>();
                 })
-                #if Linux
+                #if LINUX
                 .UseSystemd();
-                #elif Windows
+                #else
                 .UseWindowsService();
                 #endif
     }
