@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MailKit.Net.Smtp;
-using MailKit.Security;
+using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MimeKit;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Graph.Users.Item.SendMail;
 using MySql.Data.MySqlClient;
 
 namespace MantisBTMailTask
@@ -33,7 +34,6 @@ namespace MantisBTMailTask
 
             _mailConfig = new MailConfiguration();  
             configuration.GetSection("MailServer").Bind(_mailConfig);
-            _mailConfig.CheckOptionalValues();
 
             _runOnce = configuration.GetValue<bool>("RunOnce");
 
@@ -50,7 +50,7 @@ namespace MantisBTMailTask
             {
                 try
                 {
-                    ProcessOutstandingEmails(stoppingToken);
+                    await ProcessOutstandingEmails(stoppingToken);
                 }
                 catch (MySqlException e)
                 {
@@ -72,7 +72,7 @@ namespace MantisBTMailTask
             }
         }
 
-        protected void ProcessOutstandingEmails(CancellationToken stoppingToken)
+        protected async Task ProcessOutstandingEmails(CancellationToken stoppingToken)
         {
             MySqlConnectionStringBuilder csBuilder = new MySqlConnectionStringBuilder()
             {
@@ -84,18 +84,25 @@ namespace MantisBTMailTask
             };
             using (var oDB = new MySqlConnection(csBuilder.ToString()))
             {
-                oDB.Open();
-
-                var sentIdList = SendEmailsFromDatabase(stoppingToken, oDB);
-
-                if (sentIdList.Count > 0)
+                try
                 {
-                    RemoveSentEmails(stoppingToken, oDB, sentIdList);
+                    oDB.Open();
+
+                    var sentIdList = await SendEmailsFromDatabase(stoppingToken, oDB);
+
+                    if (sentIdList.Count > 0)
+                    {
+                        RemoveSentEmails(stoppingToken, oDB, sentIdList);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "There was a problem processing the email table");
                 }
             }
         }
 
-        protected List<long> SendEmailsFromDatabase(CancellationToken stoppingToken, MySqlConnection oDB)
+        protected async Task<List<long>> SendEmailsFromDatabase(CancellationToken stoppingToken, MySqlConnection oDB)
         {
             List<long> sentIdList = new List<long>();
             
@@ -106,20 +113,21 @@ namespace MantisBTMailTask
 
             if (data.HasRows)
             {
-                using (var client = new SmtpClient()) 
+                var scopes = new[] { "https://graph.microsoft.com/.default" };
+                var options = new ClientSecretCredentialOptions
                 {
-                    client.Connect (_mailConfig.Host, _mailConfig.Port, _mailConfig.SecureSocketOptions);
-                    client.Authenticate (_mailConfig.Username, _mailConfig.Password);
-
+                    AuthorityHost = AzureAuthorityHosts.AzurePublicCloud,
+                };
+                
+                var clientSecretCredential = new ClientSecretCredential(_mailConfig.TenantId, _mailConfig.ClientId, _mailConfig.ClientSecret , options);
+                
+                using (var client = new GraphServiceClient(clientSecretCredential, scopes)) 
+                {
                     while (data.Read() && !stoppingToken.IsCancellationRequested)
                     {
-                        if (SendEmail(client, data.GetString(1), data.GetString(2), data.GetString(3)))
-                        {
-                            sentIdList.Add(data.GetInt64(0));
-                        }
+                        await SendEmail(client, data.GetString(1), data.GetString(2), data.GetString(3));
+                        sentIdList.Add(data.GetInt64(0));
                     }
-
-                    client.Disconnect (true);
                 }
             }
 
@@ -145,27 +153,41 @@ namespace MantisBTMailTask
             return (count == sentIdList.Count);
         }
 
-        protected bool SendEmail(SmtpClient client, string to, string subject, string body)
+        protected async Task SendEmail(GraphServiceClient client, string to, string subject, string body)
         {
-            bool result = true;
-            var message = new MimeMessage()
+            var message = new Message()
             {
                 Subject = subject,
-                Body = new TextPart("plain") {
-                    Text = body
+                Body = new ItemBody
+                {
+                    Content = body,
+                    ContentType = BodyType.Text
+                },
+                ToRecipients = new List<Recipient>
+                {
+                    new Recipient
+                    {
+                        EmailAddress = new EmailAddress
+                        {
+                            Address = to
+                        }
+                    }
                 }
             };
-            message.From.Add(new MailboxAddress("Mantis", _mailConfig.From));
-            message.To.Add(new MailboxAddress(to));
+
             try
             {
-                client.Send(message);
+                await client.Users[_mailConfig.From]
+                    .SendMail
+                    .PostAsync(new SendMailPostRequestBody
+                    {
+                        Message = message
+                    });
             }
-            catch
+            catch (Exception e)
             {
-                result = false;
+                _logger.LogError(e, "There was a problem sending the email");
             }
-            return result;
         }
     }
 }
