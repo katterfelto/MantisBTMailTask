@@ -3,6 +3,8 @@ A windows service/systemd daemon to process the outgoing mail queue for the Mant
 
 I couldn't figure out how to solve the configuration issues I had with the PHP based mail sub-system in MantisBT. To solve it I fell back on my knowledge of C# and .NET to produce this hosted background service to debug and solve the problem.
 
+The initial version used SMTP to send the emails (the latest version using SMTP can found on the `SMTP_CLient` branch), this new version uses `Microsoft.Graph` to access our Exchage Online server to send the emails.
+
 # How To Use
 1. In your MantisBT config_inc.php file you need to include the following line, this will stop the Web app delivering the mail:
    ```php
