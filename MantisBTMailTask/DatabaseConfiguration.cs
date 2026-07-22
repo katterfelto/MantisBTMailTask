@@ -1,42 +1,23 @@
+namespace MantisBTMailTask;
 
-namespace MantisBTMailTask
+public sealed class DatabaseConfiguration
 {
-    public sealed class DatabaseConfiguration
+    public string Host { get; set; } = "localhost";
+    public uint Port { get; set; } = 3306;
+    public string Database { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+    public void CheckOptionalValues()
     {
-        public string Host { get; set; }
-        public uint Port { get; set; }
-        public string Database { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-
-        public void CheckOptionalValues()
+        if (string.IsNullOrEmpty(Host))
         {
-            Host = CheckString(Host, "localhost");
-            Port = CheckUInt(Port, 3306);
+            Host = "localhost";
         }
 
-        private string CheckString(string field, string value)
+        if (Port == 0)
         {
-            if (string.IsNullOrEmpty(field))
-            {
-                return value;
-            }
-            else
-            {
-                return field;
-            }
-        }
-
-        private uint CheckUInt(uint? field, uint value)
-        {
-            if ((field == null) || (field == 0))
-            {
-                return value;
-            }
-            else
-            {
-                return (uint)field;
-            }
+            Port = 3306;
         }
     }
 }

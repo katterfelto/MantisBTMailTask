@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish application
+        run: >
+          dotnet publish MantisBTMailTask/MantisBTMailTask.csproj
+          --configuration Release
+          --no-build
+          --output publish
+
+      - name: Include systemd unit file
+        run: cp mantisbtmailtask.service publish/
+
+      - name: Create zip archive
+        run: |
+          cd publish
+          zip -r "../MantisBTMailTask-${{ github.ref_name }}.zip" .
+
+      - name: Create tar.gz archive
+        run: |
+          cd publish
+          tar -czvf "../MantisBTMailTask-${{ github.ref_name }}.tgz" .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MantisBTMailTask-${{ github.ref_name }}
+          path: |
+            MantisBTMailTask-${{ github.ref_name }}.zip
+            MantisBTMailTask-${{ github.ref_name }}.tgz
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            MantisBTMailTask-${{ github.ref_name }}.zip
+            MantisBTMailTask-${{ github.ref_name }}.tgz
+          generate_release_notes: true

@@ -1,0 +1,22 @@
+[Unit]
+Description=MantisBT Mail Task - processes the outgoing MantisBT mail queue
+After=network.target mysql.service mariadb.service
+
+[Service]
+Type=notify
+# Path to the folder the app was published/copied into (must contain
+# MantisBTMailTask, appsettings.json, and appsettings.Production.json if used).
+WorkingDirectory=/opt/mantisbtmailtask
+ExecStart=/opt/mantisbtmailtask/MantisBTMailTask
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=mantisbtmailtask
+Environment=DOTNET_ENVIRONMENT=Production
+
+# Run as a dedicated, unprivileged service account rather than root.
+User=mantisbtmailtask
+Group=mantisbtmailtask
+
+[Install]
+WantedBy=multi-user.target
