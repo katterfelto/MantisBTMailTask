@@ -5,14 +5,8 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddHostedService<Worker>();
 
-if (OperatingSystem.IsWindows())
-{
-    builder.Services.AddWindowsService();
-}
-else if (OperatingSystem.IsLinux())
-{
-    builder.Services.AddSystemd();
-}
+builder.Services.AddWindowsService();
+builder.Services.AddSystemd();
 
 var host = builder.Build();
 host.Run();

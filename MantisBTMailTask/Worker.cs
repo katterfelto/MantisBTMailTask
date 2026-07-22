@@ -115,8 +115,17 @@ public class Worker : BackgroundService
 
             while (await data.ReadAsync(stoppingToken) && !stoppingToken.IsCancellationRequested)
             {
-                await SendEmail(client, data.GetString(1), data.GetString(2), data.GetString(3));
-                sentIdList.Add(data.GetInt64(0));
+                var id = data.GetInt64(0);
+                var sent = await SendEmail(client, data.GetString(1), data.GetString(2), data.GetString(3));
+                if (sent)
+                {
+                    sentIdList.Add(id);
+                }
+                else if (_mailConfig.ForceRemoveOnFailure)
+                {
+                    _logger.LogWarning("Removing email {EmailId} from the queue despite send failure because ForceRemoveOnFailure is enabled", id);
+                    sentIdList.Add(id);
+                }
             }
         }
 
@@ -140,7 +149,7 @@ public class Worker : BackgroundService
         return count == sentIdList.Count;
     }
 
-    protected async Task SendEmail(GraphServiceClient client, string to, string subject, string body)
+    protected async Task<bool> SendEmail(GraphServiceClient client, string to, string subject, string body)
     {
         var message = new Message
         {
@@ -170,10 +179,13 @@ public class Worker : BackgroundService
                 {
                     Message = message
                 });
+
+            return true;
         }
         catch (Exception e)
         {
             _logger.LogError(e, "There was a problem sending the email");
+            return false;
         }
     }
 }

@@ -60,6 +60,7 @@ Settings are read from `appsettings.json`.
 | `MailServer` | `ClientId` | Azure AD app registration client ID | *(required)* |
 | `MailServer` | `ClientSecret` | Azure AD app registration client secret | *(required)* |
 | `MailServer` | `From` | Mailbox address mail is sent from | *(required)* |
+| `MailServer` | `ForceRemoveOnFailure` | Remove emails from the queue even if they fail to send | `false` |
 
 ## Building
 
