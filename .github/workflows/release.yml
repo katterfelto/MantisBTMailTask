@@ -47,6 +47,19 @@ jobs:
           cd publish
           tar -czvf "../MantisBTMailTask-${{ github.ref_name }}.tgz" .
 
+      - name: Publish Windows application
+        run: >
+          dotnet publish MantisBTMailTask/MantisBTMailTask.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained false
+          --output publish-win
+
+      - name: Create Windows zip archive
+        run: |
+          cd publish-win
+          zip -r "../MantisBTMailTask-${{ github.ref_name }}-win-x64.zip" .
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -54,6 +67,7 @@ jobs:
           path: |
             MantisBTMailTask-${{ github.ref_name }}.zip
             MantisBTMailTask-${{ github.ref_name }}.tgz
+            MantisBTMailTask-${{ github.ref_name }}-win-x64.zip
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
@@ -61,4 +75,5 @@ jobs:
           files: |
             MantisBTMailTask-${{ github.ref_name }}.zip
             MantisBTMailTask-${{ github.ref_name }}.tgz
+            MantisBTMailTask-${{ github.ref_name }}-win-x64.zip
           generate_release_notes: true

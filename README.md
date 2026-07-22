@@ -20,8 +20,8 @@ The original implementation sent mail over SMTP; that version is preserved on th
    $g_email_send_using_cronjob = ON;
    ```
 2. Download the latest release artifact from the [Releases](https://github.com/katterfelto/MantisBTMailTask/releases/latest) page:
-   - `MantisBTMailTask-<version>.zip` for Windows
-   - `MantisBTMailTask-<version>.tgz` for Linux
+   - `MantisBTMailTask-<version>-win-x64.zip` for Windows — a win-x64 build that includes `MantisBTMailTask.exe`
+   - `MantisBTMailTask-<version>.zip` / `MantisBTMailTask-<version>.tgz` for Linux — a framework-dependent build (requires the matching .NET runtime to be installed) that also includes the sample systemd unit file
 
    These are built and published automatically by the project's GitHub Actions release workflow.
 3. Extract the archive contents to the location you want to run the service from. The archive includes `appsettings.json` and, for Linux, the sample [`mantisbtmailtask.service`](mantisbtmailtask.service) unit file.
