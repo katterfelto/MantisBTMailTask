@@ -14,7 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.10"/>
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.10"/>
-    <PackageReference Include="Microsoft.Graph" Version="6.2.0" />
+    <PackageReference Include="Microsoft.Graph" Version="6.5.0" />
     <PackageReference Include="MySqlConnector" Version="2.6.1"/>
   </ItemGroup>
 </Project>
